@@ -1,66 +1,54 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 
-import '../../data/datasources/desk_datasource.dart';
+import '../../data/datasources/datasources.dart';
 import '../../data/repositories/desk_repository_impl.dart';
 import '../../domain/repositories/desk_repository.dart';
 import '../../domain/usecases/desk_usecases.dart';
 import '../state/desks_state.dart';
 
-// ============================================================================
-// Data Layer Providers
-// ============================================================================
-
-/// Provider for desk data source.
-final deskDataSourceProvider = Provider<DeskDataSource>((ref) {
-  return MockDeskDataSource();
+final deskHttpClientProvider = Provider<http.Client>((ref) {
+  final client = http.Client();
+  ref.onDispose(client.close);
+  return client;
 });
 
-/// Provider for desk repository.
+final deskDataSourceProvider = Provider<DeskDataSource>((ref) {
+  final client = ref.watch(deskHttpClientProvider);
+  return DeskApiDataSource(client: client);
+});
+
 final deskRepositoryProvider = Provider<DeskRepository>((ref) {
   final dataSource = ref.watch(deskDataSourceProvider);
   return DeskRepositoryImpl(dataSource: dataSource);
 });
 
-// ============================================================================
-// Use Case Providers
-// ============================================================================
-
-/// Provider for GetDesksUseCase.
 final getDesksUseCaseProvider = Provider<GetDesksUseCase>((ref) {
   final repository = ref.watch(deskRepositoryProvider);
   return GetDesksUseCase(repository);
 });
 
-/// Provider for GetDeskByIdUseCase.
 final getDeskByIdUseCaseProvider = Provider<GetDeskByIdUseCase>((ref) {
   final repository = ref.watch(deskRepositoryProvider);
   return GetDeskByIdUseCase(repository);
 });
 
-/// Provider for GetFeaturedDesksUseCase.
 final getFeaturedDesksUseCaseProvider =
     Provider<GetFeaturedDesksUseCase>((ref) {
   final repository = ref.watch(deskRepositoryProvider);
   return GetFeaturedDesksUseCase(repository);
 });
 
-/// Provider for SearchDesksUseCase.
 final searchDesksUseCaseProvider = Provider<SearchDesksUseCase>((ref) {
   final repository = ref.watch(deskRepositoryProvider);
   return SearchDesksUseCase(repository);
 });
 
-// ============================================================================
-// State Providers
-// ============================================================================
-
-/// Notifier for desks list state.
 class DesksNotifier extends StateNotifier<DesksState> {
   final GetDesksUseCase _getDesksUseCase;
 
   DesksNotifier(this._getDesksUseCase) : super(const DesksInitial());
 
-  /// Load all desks.
   Future<void> loadDesks() async {
     state = const DesksLoading();
 
@@ -72,7 +60,6 @@ class DesksNotifier extends StateNotifier<DesksState> {
     );
   }
 
-  /// Filter desks by category.
   void filterByCategory(String? category) {
     if (state is DesksLoaded) {
       final currentState = state as DesksLoaded;
@@ -80,7 +67,6 @@ class DesksNotifier extends StateNotifier<DesksState> {
     }
   }
 
-  /// Clear category filter.
   void clearFilter() {
     if (state is DesksLoaded) {
       final currentState = state as DesksLoaded;
@@ -91,13 +77,11 @@ class DesksNotifier extends StateNotifier<DesksState> {
     }
   }
 
-  /// Refresh desks list.
   Future<void> refresh() async {
     await loadDesks();
   }
 }
 
-/// Provider for desks state notifier.
 final desksProvider = StateNotifierProvider<DesksNotifier, DesksState>(
   (ref) {
     final getDesksUseCase = ref.watch(getDesksUseCaseProvider);
@@ -105,14 +89,12 @@ final desksProvider = StateNotifierProvider<DesksNotifier, DesksState>(
   },
 );
 
-/// Notifier for desk detail state.
 class DeskDetailNotifier extends StateNotifier<DeskDetailState> {
   final GetDeskByIdUseCase _getDeskByIdUseCase;
 
   DeskDetailNotifier(this._getDeskByIdUseCase)
       : super(const DeskDetailInitial());
 
-  /// Load desk by ID.
   Future<void> loadDesk(String id) async {
     state = const DeskDetailLoading();
 
@@ -124,7 +106,6 @@ class DeskDetailNotifier extends StateNotifier<DeskDetailState> {
     );
   }
 
-  /// Update quantity.
   void updateQuantity(int quantity) {
     if (state is DeskDetailLoaded && quantity > 0) {
       final currentState = state as DeskDetailLoaded;
@@ -132,7 +113,6 @@ class DeskDetailNotifier extends StateNotifier<DeskDetailState> {
     }
   }
 
-  /// Increment quantity.
   void incrementQuantity() {
     if (state is DeskDetailLoaded) {
       final currentState = state as DeskDetailLoaded;
@@ -140,7 +120,6 @@ class DeskDetailNotifier extends StateNotifier<DeskDetailState> {
     }
   }
 
-  /// Decrement quantity.
   void decrementQuantity() {
     if (state is DeskDetailLoaded) {
       final currentState = state as DeskDetailLoaded;
@@ -151,9 +130,6 @@ class DeskDetailNotifier extends StateNotifier<DeskDetailState> {
   }
 }
 
-/// Provider for desk detail state notifier.
-///
-/// Family provider allows creating separate instances per desk ID.
 final deskDetailProvider =
     StateNotifierProvider.family<DeskDetailNotifier, DeskDetailState, String>(
   (ref, deskId) {
