@@ -30,7 +30,9 @@ class ChairApiDataSource implements ChairDataSource {
       final response = await client.get(uri);
 
       if (response.statusCode == 200) {
-        return ChairModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+        return ChairModel.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
       }
 
       if (response.statusCode == 404) {
@@ -39,7 +41,7 @@ class ChairApiDataSource implements ChairDataSource {
 
       throw ServerException(
         message: 'Failed to fetch chair',
-        code: response.statusCode.toString(),
+        code: response.statusCode,
       );
     } on SocketException {
       throw const NetworkException(message: 'No internet connection');
@@ -75,7 +77,7 @@ class ChairApiDataSource implements ChairDataSource {
       if (response.statusCode != 200) {
         throw ServerException(
           message: 'Failed to fetch chairs',
-          code: response.statusCode.toString(),
+          code: response.statusCode,
         );
       }
 

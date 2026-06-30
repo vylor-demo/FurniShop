@@ -30,7 +30,9 @@ class BedroomApiDataSource implements BedroomDataSource {
       final response = await client.get(uri);
 
       if (response.statusCode == 200) {
-        return BedroomModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+        return BedroomModel.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
       }
 
       if (response.statusCode == 404) {
@@ -39,7 +41,7 @@ class BedroomApiDataSource implements BedroomDataSource {
 
       throw ServerException(
         message: 'Failed to fetch bedroom',
-        code: response.statusCode.toString(),
+        code: response.statusCode,
       );
     } on SocketException {
       throw const NetworkException(message: 'No internet connection');
@@ -75,7 +77,7 @@ class BedroomApiDataSource implements BedroomDataSource {
       if (response.statusCode != 200) {
         throw ServerException(
           message: 'Failed to fetch bedrooms',
-          code: response.statusCode.toString(),
+          code: response.statusCode,
         );
       }
 

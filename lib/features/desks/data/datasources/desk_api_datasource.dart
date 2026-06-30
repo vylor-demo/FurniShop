@@ -30,7 +30,9 @@ class DeskApiDataSource implements DeskDataSource {
       final response = await client.get(uri);
 
       if (response.statusCode == 200) {
-        return DeskModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+        return DeskModel.fromJson(
+          jsonDecode(response.body) as Map<String, dynamic>,
+        );
       }
 
       if (response.statusCode == 404) {
@@ -39,7 +41,7 @@ class DeskApiDataSource implements DeskDataSource {
 
       throw ServerException(
         message: 'Failed to fetch desk',
-        code: response.statusCode.toString(),
+        code: response.statusCode,
       );
     } on SocketException {
       throw const NetworkException(message: 'No internet connection');
@@ -75,7 +77,7 @@ class DeskApiDataSource implements DeskDataSource {
       if (response.statusCode != 200) {
         throw ServerException(
           message: 'Failed to fetch desks',
-          code: response.statusCode.toString(),
+          code: response.statusCode,
         );
       }
 

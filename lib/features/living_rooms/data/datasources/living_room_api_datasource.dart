@@ -41,7 +41,7 @@ class LivingRoomApiDataSource implements LivingRoomDataSource {
 
       throw ServerException(
         message: 'Failed to fetch living room',
-        code: response.statusCode.toString(),
+        code: response.statusCode,
       );
     } on SocketException {
       throw const NetworkException(message: 'No internet connection');
@@ -77,7 +77,7 @@ class LivingRoomApiDataSource implements LivingRoomDataSource {
       if (response.statusCode != 200) {
         throw ServerException(
           message: 'Failed to fetch living rooms',
-          code: response.statusCode.toString(),
+          code: response.statusCode,
         );
       }
 
